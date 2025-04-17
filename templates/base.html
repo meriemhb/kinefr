@@ -41,20 +41,101 @@
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
                         {% if user.role == 'PATIENT' %}
+                        <!-- Menu Patient -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'appointments:list' %}">
                                 <i class="fas fa-calendar"></i> Mes rendez-vous
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'appointments:create' %}">
+                                <i class="fas fa-plus-circle"></i> Prendre RDV
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-shopping-cart"></i> Matériel médical
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-exclamation-circle"></i> Réclamations
+                            </a>
+                        </li>
+
                         {% elif user.role == 'KINE' %}
+                        <!-- Menu Kiné -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'appointments:kine_list' %}">
                                 <i class="fas fa-calendar-check"></i> Mes rendez-vous
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'appointments:availability_list' %}">
+                                <i class="fas fa-clock"></i> Mes disponibilités
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'appointments:kine_patients' %}">
+                                <i class="fas fa-users"></i> Mes patients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-bar"></i> Statistiques
+                            </a>
+                        </li>
+
+                        {% elif user.role == 'VENDEUR' %}
+                        <!-- Menu Vendeur -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-box"></i> Catalogue
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-plus"></i> Ajouter un produit
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-shopping-basket"></i> Commandes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-line"></i> Statistiques ventes
+                            </a>
+                        </li>
+
+                        {% elif user.is_staff %}
+                        <!-- Menu Admin -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'appointments:admin_dashboard' %}">
+                                <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-users-cog"></i> Gestion utilisateurs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-tasks"></i> Modération
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-cogs"></i> Paramètres
+                            </a>
+                        </li>
                         {% endif %}
                     {% endif %}
                 </ul>
+
+                <!-- Menu utilisateur -->
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
@@ -62,13 +143,24 @@
                             <i class="fas fa-user"></i> {{ user.get_full_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">
-                                <i class="fas fa-id-card"></i> Mon profil
-                            </a></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:profile' %}">
+                                    <i class="fas fa-id-card"></i> Mon profil
+                                </a>
+                            </li>
+                            {% if user.role == 'PATIENT' %}
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-file-invoice"></i> Mes factures
+                                </a>
+                            </li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">
-                                <i class="fas fa-sign-out-alt"></i> Déconnexion
-                            </a></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {% else %}

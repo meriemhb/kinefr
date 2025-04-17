@@ -12,4 +12,7 @@ urlpatterns = [
     path('kine/', views.kine_appointment_list, name='kine_list'),
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('kine/patients/', views.kine_patient_list, name='kine_patients'),
+    path('kine/availabilities/', views.availability_list, name='availability_list'),
+    path('kine/availabilities/create/', views.availability_create, name='availability_create'),
+    path('kine/availabilities/<int:pk>/delete/', views.availability_delete, name='availability_delete'),
 ] 

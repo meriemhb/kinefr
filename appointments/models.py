@@ -2,6 +2,7 @@ from django.db import models
 from users.models import Utilisateur
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 
 class Appointment(models.Model):
     STATUT_CHOICES = [
@@ -33,7 +34,7 @@ class Appointment(models.Model):
         return colors.get(self.statut, 'secondary')
 
 class Availability(models.Model):
-    kine = models.ForeignKey(User, on_delete=models.CASCADE, related_name='availabilities')
+    kine = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='availabilities')
     jour = models.DateField()
     heure_debut = models.TimeField()
     heure_fin = models.TimeField()
