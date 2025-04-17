@@ -1,24 +1,21 @@
 from django import forms
-from .models import RendezVous
-from users.models import Kine
-from django.utils import timezone
+from .models import Appointment
+from users.models import Utilisateur
 
-class RendezVousForm(forms.ModelForm):
+class AppointmentForm(forms.ModelForm):
     class Meta:
-        model = RendezVous
-        fields = ['kine', 'date', 'heure', 'motif']
+        model = Appointment
+        fields = ['kine', 'date_heure', 'duree', 'notes']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date()}),
-            'heure': forms.TimeInput(attrs={'type': 'time'}),
-            'motif': forms.Textarea(attrs={'rows': 3}),
+            'date_heure': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'duree': forms.NumberInput(attrs={'min': '15', 'max': '120', 'step': '15'}),
+            'notes': forms.Textarea(attrs={'rows': 4}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filtrer les kinésithérapeutes actifs
-        self.fields['kine'].queryset = Kine.objects.filter(utilisateur__is_active=True)
-        # Personnaliser l'affichage des kinésithérapeutes
-        self.fields['kine'].label_from_instance = lambda obj: f"{obj.utilisateur.get_full_name()} - {obj.specialites}"
-        self.fields['date'].label = "Date du rendez-vous"
-        self.fields['heure'].label = "Heure du rendez-vous"
-        self.fields['motif'].label = "Motif de la consultation" 
+        self.fields['kine'].queryset = Utilisateur.objects.filter(role='KINE')
+        self.fields['kine'].label = 'Kinésithérapeute'
+        self.fields['date_heure'].label = 'Date et heure'
+        self.fields['duree'].label = 'Durée (minutes)'
+        self.fields['notes'].label = 'Notes' 

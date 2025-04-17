@@ -2,21 +2,81 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from .models import RendezVous
-from .forms import RendezVousForm
+from .models import Appointment
+from .forms import AppointmentForm
 
 @login_required
 def appointment_list(request):
     if request.user.role == 'PATIENT':
-        appointments = RendezVous.objects.filter(patient=request.user.patient_profile)
+        appointments = Appointment.objects.filter(patient=request.user)
     elif request.user.role == 'KINE':
-        appointments = RendezVous.objects.filter(kine=request.user.kine_profile)
+        appointments = Appointment.objects.filter(kine=request.user)
     else:
-        appointments = RendezVous.objects.none()
+        appointments = []
     
-    return render(request, 'appointments/list.html', {
+    context = {
         'appointments': appointments
-    })
+    }
+    return render(request, 'appointments/list.html', context)
+
+@login_required
+def appointment_create(request):
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            if request.user.role == 'PATIENT':
+                appointment.patient = request.user
+            elif request.user.role == 'KINE':
+                appointment.kine = request.user
+            appointment.save()
+            messages.success(request, 'Rendez-vous créé avec succès.')
+            return redirect('appointments:list')
+    else:
+        form = AppointmentForm()
+    
+    return render(request, 'appointments/form.html', {'form': form})
+
+@login_required
+def appointment_detail(request, pk):
+    appointment = get_object_or_404(Appointment, pk=pk)
+    if request.user not in [appointment.patient, appointment.kine]:
+        messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
+        return redirect('appointments:list')
+    
+    return render(request, 'appointments/detail.html', {'appointment': appointment})
+
+@login_required
+def appointment_update(request, pk):
+    appointment = get_object_or_404(Appointment, pk=pk)
+    if request.user not in [appointment.patient, appointment.kine]:
+        messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
+        return redirect('appointments:list')
+    
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST, instance=appointment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Rendez-vous mis à jour avec succès.')
+            return redirect('appointments:detail', pk=pk)
+    else:
+        form = AppointmentForm(instance=appointment)
+    
+    return render(request, 'appointments/form.html', {'form': form, 'appointment': appointment})
+
+@login_required
+def appointment_delete(request, pk):
+    appointment = get_object_or_404(Appointment, pk=pk)
+    if request.user not in [appointment.patient, appointment.kine]:
+        messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
+        return redirect('appointments:list')
+    
+    if request.method == 'POST':
+        appointment.delete()
+        messages.success(request, 'Rendez-vous supprimé avec succès.')
+        return redirect('appointments:list')
+    
+    return render(request, 'appointments/delete.html', {'appointment': appointment})
 
 @login_required
 def kine_appointment_list(request):
@@ -24,98 +84,14 @@ def kine_appointment_list(request):
         messages.error(request, "Vous n'avez pas accès à cette page.")
         return redirect('home')
     
-    appointments = RendezVous.objects.filter(kine=request.user.kine_profile)
-    
-    # Filtrage par statut
     statut = request.GET.get('statut')
+    appointments = Appointment.objects.filter(kine=request.user)
+    
     if statut:
         appointments = appointments.filter(statut=statut)
     
-    return render(request, 'appointments/kine_list.html', {
+    context = {
         'appointments': appointments,
-        'current_statut': statut
-    })
-
-@login_required
-def appointment_create(request):
-    if request.user.role != 'PATIENT':
-        messages.error(request, "Seuls les patients peuvent créer des rendez-vous.")
-        return redirect('home')
-    
-    if request.method == 'POST':
-        form = RendezVousForm(request.POST)
-        if form.is_valid():
-            appointment = form.save(commit=False)
-            appointment.patient = request.user.patient_profile
-            appointment.save()
-            messages.success(request, "Le rendez-vous a été créé avec succès.")
-            return redirect('appointments:detail', pk=appointment.pk)
-    else:
-        form = RendezVousForm()
-    
-    return render(request, 'appointments/create.html', {
-        'form': form
-    })
-
-@login_required
-def appointment_detail(request, pk):
-    appointment = get_object_or_404(RendezVous, pk=pk)
-    
-    # Vérifier que l'utilisateur a le droit de voir ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
-        messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
-        return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
-        messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
-        return redirect('home')
-    
-    return render(request, 'appointments/detail.html', {
-        'appointment': appointment
-    })
-
-@login_required
-def appointment_update(request, pk):
-    appointment = get_object_or_404(RendezVous, pk=pk)
-    
-    # Vérifier que l'utilisateur a le droit de modifier ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
-        messages.error(request, "Vous n'avez pas le droit de modifier ce rendez-vous.")
-        return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
-        messages.error(request, "Vous n'avez pas le droit de modifier ce rendez-vous.")
-        return redirect('home')
-    
-    if request.method == 'POST':
-        form = RendezVousForm(request.POST, instance=appointment)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Le rendez-vous a été mis à jour avec succès.")
-            return redirect('appointments:detail', pk=appointment.pk)
-    else:
-        form = RendezVousForm(instance=appointment)
-    
-    return render(request, 'appointments/update.html', {
-        'form': form,
-        'appointment': appointment
-    })
-
-@login_required
-def appointment_delete(request, pk):
-    appointment = get_object_or_404(RendezVous, pk=pk)
-    
-    # Vérifier que l'utilisateur a le droit de supprimer ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
-        messages.error(request, "Vous n'avez pas le droit de supprimer ce rendez-vous.")
-        return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
-        messages.error(request, "Vous n'avez pas le droit de supprimer ce rendez-vous.")
-        return redirect('home')
-    
-    if request.method == 'POST':
-        appointment.delete()
-        messages.success(request, "Le rendez-vous a été supprimé avec succès.")
-        return redirect('appointments:list')
-    
-    return render(request, 'appointments/delete.html', {
-        'appointment': appointment
-    })
+        'current_status': statut
+    }
+    return render(request, 'appointments/kine_list.html', context)
