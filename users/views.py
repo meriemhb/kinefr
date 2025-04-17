@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import UserRegistrationForm, UserProfileForm
 from .models import Utilisateur, Patient, Kine, Vendeur
@@ -122,3 +123,24 @@ def admin_settings(request):
         messages.success(request, 'Paramètres mis à jour avec succès')
         return redirect('admin_settings')
     return render(request, 'admin/settings.html')
+
+@login_required
+def patient_detail(request, pk):
+    patient = get_object_or_404(User, pk=pk, role='PATIENT')
+    
+    # Vérifier si l'utilisateur a le droit de voir ce profil
+    if request.user.role != 'KINE' and request.user != patient:
+        messages.error(request, "Vous n'avez pas accès à ce profil.")
+        return redirect('home')
+    
+    # Récupérer les rendez-vous du patient avec le kiné actuel
+    appointments = Appointment.objects.filter(
+        patient=patient,
+        kine=request.user
+    ).order_by('-date_heure')
+    
+    context = {
+        'patient': patient,
+        'appointments': appointments
+    }
+    return render(request, 'users/patient_detail.html', context)
