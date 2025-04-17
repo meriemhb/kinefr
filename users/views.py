@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .forms import UserRegistrationForm, UserProfileForm
 from .models import Utilisateur, Patient, Kine, Vendeur
+from django.views.generic import View
+from appointments.models import Appointment
+from django.db import models
 
 def register(request):
     if request.method == 'POST':
@@ -58,3 +61,64 @@ def edit_profile(request):
         form = UserProfileForm(instance=request.user)
 
     return render(request, 'users/edit_profile.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+def is_admin(user):
+    return user.is_superuser
+
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    total_users = Utilisateur.objects.count()
+    total_appointments = Appointment.objects.count()
+    total_kines = Kine.objects.count()
+    total_patients = Patient.objects.count()
+    recent_appointments = Appointment.objects.order_by('-date_heure')[:10]
+
+    context = {
+        'total_users': total_users,
+        'total_appointments': total_appointments,
+        'total_kines': total_kines,
+        'total_patients': total_patients,
+        'recent_appointments': recent_appointments,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_users(request):
+    users = Utilisateur.objects.all()
+    return render(request, 'admin/users.html', {'users': users})
+
+@login_required
+@user_passes_test(is_admin)
+def admin_appointments(request):
+    appointments = Appointment.objects.all().order_by('-date_heure')
+    return render(request, 'admin/appointments.html', {'appointments': appointments})
+
+@login_required
+@user_passes_test(is_admin)
+def admin_reports(request):
+    # Statistiques pour les rapports
+    appointments_by_status = Appointment.objects.values('statut').annotate(count=models.Count('id'))
+    appointments_by_month = Appointment.objects.extra(
+        select={'month': "strftime('%m', date_heure)"}
+    ).values('month').annotate(count=models.Count('id'))
+    
+    context = {
+        'appointments_by_status': appointments_by_status,
+        'appointments_by_month': appointments_by_month,
+    }
+    return render(request, 'admin/reports.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_settings(request):
+    if request.method == 'POST':
+        # Gérer les paramètres ici
+        messages.success(request, 'Paramètres mis à jour avec succès')
+        return redirect('admin_settings')
+    return render(request, 'admin/settings.html')

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
+from users.views import logout_view, admin_dashboard, admin_users, admin_appointments, admin_reports, admin_settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,5 +28,11 @@ urlpatterns = [
     # path('equipment/', include('equipment.urls')),  # À implémenter plus tard
     # path('complaints/', include('complaints.urls')),  # À implémenter plus tard
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
+    path('logout/', logout_view, name='logout'),
+    # URLs du tableau de bord administrateur
+    path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('admin/users/', admin_users, name='admin_users'),
+    path('admin/appointments/', admin_appointments, name='admin_appointments'),
+    path('admin/reports/', admin_reports, name='admin_reports'),
+    path('admin/settings/', admin_settings, name='admin_settings'),
 ]

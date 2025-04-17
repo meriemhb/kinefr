@@ -8,9 +8,9 @@ from .forms import RendezVousForm
 @login_required
 def appointment_list(request):
     if request.user.role == 'PATIENT':
-        appointments = RendezVous.objects.filter(patient=request.user.patient)
+        appointments = RendezVous.objects.filter(patient=request.user.patient_profile)
     elif request.user.role == 'KINE':
-        appointments = RendezVous.objects.filter(kine=request.user.kine)
+        appointments = RendezVous.objects.filter(kine=request.user.kine_profile)
     else:
         appointments = RendezVous.objects.none()
     
@@ -24,7 +24,7 @@ def kine_appointment_list(request):
         messages.error(request, "Vous n'avez pas accès à cette page.")
         return redirect('home')
     
-    appointments = RendezVous.objects.filter(kine=request.user.kine)
+    appointments = RendezVous.objects.filter(kine=request.user.kine_profile)
     
     # Filtrage par statut
     statut = request.GET.get('statut')
@@ -46,7 +46,7 @@ def appointment_create(request):
         form = RendezVousForm(request.POST)
         if form.is_valid():
             appointment = form.save(commit=False)
-            appointment.patient = request.user.patient
+            appointment.patient = request.user.patient_profile
             appointment.save()
             messages.success(request, "Le rendez-vous a été créé avec succès.")
             return redirect('appointments:detail', pk=appointment.pk)
@@ -62,10 +62,10 @@ def appointment_detail(request, pk):
     appointment = get_object_or_404(RendezVous, pk=pk)
     
     # Vérifier que l'utilisateur a le droit de voir ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient:
+    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
         messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
         return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine:
+    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
         messages.error(request, "Vous n'avez pas accès à ce rendez-vous.")
         return redirect('home')
     
@@ -78,10 +78,10 @@ def appointment_update(request, pk):
     appointment = get_object_or_404(RendezVous, pk=pk)
     
     # Vérifier que l'utilisateur a le droit de modifier ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient:
+    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
         messages.error(request, "Vous n'avez pas le droit de modifier ce rendez-vous.")
         return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine:
+    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
         messages.error(request, "Vous n'avez pas le droit de modifier ce rendez-vous.")
         return redirect('home')
     
@@ -104,10 +104,10 @@ def appointment_delete(request, pk):
     appointment = get_object_or_404(RendezVous, pk=pk)
     
     # Vérifier que l'utilisateur a le droit de supprimer ce rendez-vous
-    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient:
+    if request.user.role == 'PATIENT' and appointment.patient != request.user.patient_profile:
         messages.error(request, "Vous n'avez pas le droit de supprimer ce rendez-vous.")
         return redirect('home')
-    elif request.user.role == 'KINE' and appointment.kine != request.user.kine:
+    elif request.user.role == 'KINE' and appointment.kine != request.user.kine_profile:
         messages.error(request, "Vous n'avez pas le droit de supprimer ce rendez-vous.")
         return redirect('home')
     
