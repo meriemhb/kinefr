@@ -24,15 +24,22 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('users/', include('users.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('appointments/', include('appointments.urls')),
     # path('equipment/', include('equipment.urls')),  # À implémenter plus tard
     # path('complaints/', include('complaints.urls')),  # À implémenter plus tard
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', logout_view, name='logout'),
+    
     # URLs du tableau de bord administrateur
-    path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
-    path('admin/users/', admin_users, name='admin_users'),
-    path('admin/appointments/', admin_appointments, name='admin_appointments'),
-    path('admin/reports/', admin_reports, name='admin_reports'),
-    path('admin/settings/', admin_settings, name='admin_settings'),
+    path('dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('dashboard/users/', admin_users, name='admin_users'),
+    path('dashboard/appointments/', admin_appointments, name='admin_appointments'),
+    path('dashboard/reports/', admin_reports, name='admin_reports'),
+    path('dashboard/settings/', admin_settings, name='admin_settings'),
+    
+    # Pages statiques
+    path('about/', TemplateView.as_view(template_name='about.html'), name='about'),
+    path('contact/', TemplateView.as_view(template_name='contact.html'), name='contact'),
+    path('legal/', TemplateView.as_view(template_name='legal.html'), name='legal'),
 ]
